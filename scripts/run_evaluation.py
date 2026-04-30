@@ -1,4 +1,4 @@
-"""Phase 4: Run experiment instances through GPT-4.1-mini and collect Q1–Q4 responses."""
+"""Phase 4: Run experiment instances through GPT-4.1-mini and collect Q1–Q3 responses."""
 from __future__ import annotations
 
 import asyncio
@@ -27,8 +27,8 @@ MODEL = "gpt-4.1-mini"
 SYSTEM_PROMPT = (
     "You are a careful question-answering assistant. "
     "You will be given several documents and a multiple-choice question. "
-    "Answer each sub-question (Q1, Q2, Q3, Q4) using ONLY the corresponding option letter. "
-    "Respond with a JSON object containing exactly four keys: \"q1\", \"q2\", \"q3\", \"q4\". "
+    "Answer each sub-question (Q1, Q2, Q3) using ONLY the corresponding option letter. "
+    "Respond with a JSON object containing exactly three keys: \"q1\", \"q2\", \"q3\". "
     "Each value must be a single uppercase letter. No explanation needed."
 )
 
@@ -40,19 +40,18 @@ def _extract_letter(raw: str) -> str | None:
 
 
 def _parse_response(raw: str) -> dict[str, str | None]:
-    """Parse model response into q1–q4 letter answers."""
+    """Parse model response into q1–q3 letter answers."""
     try:
         data = json.loads(raw)
         return {
             "q1": _extract_letter(str(data.get("q1", ""))),
             "q2": _extract_letter(str(data.get("q2", ""))),
             "q3": _extract_letter(str(data.get("q3", ""))),
-            "q4": _extract_letter(str(data.get("q4", ""))),
         }
     except (json.JSONDecodeError, AttributeError):
         # Fallback: scan for Q1:X patterns
         answers: dict[str, str | None] = {}
-        for q in ("q1", "q2", "q3", "q4"):
+        for q in ("q1", "q2", "q3"):
             m = re.search(rf"{q}\s*[:\-]\s*([A-Z])", raw, re.IGNORECASE)
             answers[q] = m.group(1).upper() if m else None
         return answers
@@ -109,7 +108,6 @@ async def _call_api_async(
                     "q1_answer":       answers["q1"],
                     "q2_answer":       answers["q2"],
                     "q3_answer":       answers["q3"],
-                    "q4_answer":       answers["q4"],
                     "q1_correct":      q1_correct,
                     "raw_response":    raw,
                     "status":          "ok",
@@ -166,7 +164,7 @@ def evaluate(
         True, help="Skip already-processed exp_ids found in output file"
     ),
 ) -> None:
-    """Run all experiment instances through the model and collect Q1–Q4 answers (Phase 4)."""
+    """Run all experiment instances through the model and collect Q1–Q3 answers (Phase 4)."""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         console.print("[red]OPENAI_API_KEY not set. Add it to .env[/red]")
@@ -293,21 +291,11 @@ def inspect(
         "B": "Credibility",
         "C": "Majority",
         "D": "Content quality",
-        "E": "No conflict noticed",
     }
     q3_counts = Counter(r.get("q3_answer") for r in records if r.get("q3_answer"))
     for letter, label in q3_map.items():
         n = q3_counts.get(letter, 0)
         pct = n / len(records) if records else 0
-        console.print(f"  ({letter}) {label:<22} {n:>4}  {pct:.1%}")
-
-    # Q4 conflict awareness
-    console.print("\n[bold]Q4 conflict awareness:[/bold]")
-    q4_counts = Counter(r.get("q4_answer") for r in records if r.get("q4_answer"))
-    total_q4 = sum(q4_counts.values())
-    for letter, label in [("A", "Noticed conflict"), ("B", "Did not notice")]:
-        n = q4_counts.get(letter, 0)
-        pct = n / total_q4 if total_q4 else 0
         console.print(f"  ({letter}) {label:<22} {n:>4}  {pct:.1%}")
 
 

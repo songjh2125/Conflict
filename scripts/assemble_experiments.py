@@ -216,7 +216,6 @@ def _build_eval_prompt(
 ) -> str:
     lines: list[str] = [
         "The following documents were retrieved regarding the question below.",
-        "Read them carefully — they may contain conflicting information.",
         "",
         f"Question: {question}",
         "",
@@ -257,11 +256,6 @@ def _build_eval_prompt(
         "(B) The source type is more credible (e.g., academic journal, official institution)",
         "(C) More documents support the same claim",
         "(D) The content was more specific or convincing",
-        "(E) I did not notice a conflict between the documents",
-        "",
-        "Q4. Did you notice a factual conflict between the documents?",
-        "(A) Yes, I noticed conflicting claims",
-        "(B) No, the documents appeared consistent",
     ]
 
     return "\n".join(lines)
