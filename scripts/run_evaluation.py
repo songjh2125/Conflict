@@ -22,7 +22,7 @@ load_dotenv()
 app = typer.Typer(add_completion=False)
 console = Console()
 
-MODEL = "gpt-4.1-mini"
+MODEL = "openai/gpt-4.1-mini"
 
 SYSTEM_PROMPT = (
     "You are a careful question-answering assistant. "
@@ -165,9 +165,9 @@ def evaluate(
     ),
 ) -> None:
     """Run all experiment instances through the model and collect Q1–Q3 answers (Phase 4)."""
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        console.print("[red]OPENAI_API_KEY not set. Add it to .env[/red]")
+        console.print("[red]OPENROUTER_API_KEY not set. Add it to .env[/red]")
         raise typer.Exit(1)
 
     if not experiments_path.exists():
@@ -202,7 +202,7 @@ def evaluate(
     )
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    client = AsyncOpenAI(api_key=api_key)
+    client = AsyncOpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
 
     # Run async evaluation
     with Progress(

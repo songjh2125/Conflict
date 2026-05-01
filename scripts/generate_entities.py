@@ -22,7 +22,7 @@ load_dotenv()
 app = typer.Typer(add_completion=False)
 console = Console()
 
-MODEL = "gpt-4.1-mini"
+MODEL = "openai/gpt-4.1-mini"
 
 SYSTEM_PROMPT = (
     "You create synthetic research data. Generate fictional entities with conflicting "
@@ -79,13 +79,13 @@ def generate(
     seed: int = typer.Option(42, help="Random seed for reproducibility"),
 ) -> None:
     """Generate synthetic entity + conflicting fact pairs (Phase 1)."""
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        console.print("[red]OPENAI_API_KEY not set. Add it to .env[/red]")
+        console.print("[red]OPENROUTER_API_KEY not set. Add it to .env[/red]")
         raise typer.Exit(1)
 
     random.seed(seed)
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Build a balanced slot list cycling through all (class, domain) combos

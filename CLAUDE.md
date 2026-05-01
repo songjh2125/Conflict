@@ -10,7 +10,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Requires `OPENAI_API_KEY` in `.env`. All scripts load it via `python-dotenv`.
+Requires `OPENROUTER_API_KEY` in `.env`. All scripts load it via `python-dotenv`.
 
 ## Running the pipeline
 

@@ -21,7 +21,7 @@ load_dotenv()
 app = typer.Typer(add_completion=False)
 console = Console()
 
-MODEL = "gpt-4.1-mini"
+MODEL = "openai/gpt-4.1-mini"
 
 # Combos that appear multiple times across new conditions → need 3 variants each
 VARIANT_COMBOS: list[tuple[str, str]] = [
@@ -141,16 +141,16 @@ def generate(
 
     For each entity: academic / news / blog  ×  correct claim / incorrect claim.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        console.print("[red]OPENAI_API_KEY not set. Add it to .env[/red]")
+        console.print("[red]OPENROUTER_API_KEY not set. Add it to .env[/red]")
         raise typer.Exit(1)
 
     if not entities_path.exists():
         console.print(f"[red]Entities file not found:[/red] {entities_path}")
         raise typer.Exit(1)
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
     output.parent.mkdir(parents=True, exist_ok=True)
 
     entities: list[SeedEntity] = []
@@ -280,9 +280,9 @@ def generate_variants(
     Appends to the existing documents file.
     Combos: academic-correct/incorrect, news-correct/incorrect, blog-incorrect.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
-        console.print("[red]OPENAI_API_KEY not set.[/red]")
+        console.print("[red]OPENROUTER_API_KEY not set.[/red]")
         raise typer.Exit(1)
 
     if not entities_path.exists():
@@ -315,7 +315,7 @@ def generate_variants(
 
     console.print(f"Generating [bold]{len(tasks)}[/bold] variant documents …")
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
     generated = skipped = 0
 
     with jsonlines.open(documents_path, mode="a") as writer:
